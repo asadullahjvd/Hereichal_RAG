@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AsadNav</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+/* ── Reset & tokens ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #F6F5F1;
+  --surface:   #FFFFFF;
+  --panel:     #EFEDE6;
+  --border:    #E2DFD5;
+  --border-hi: #CFCABA;
+  --accent:    #2F6F5E;
+  --accent-soft: #E3ECE7;
+  --accent-hi: #23594B;
+  --ink-tint:  rgba(47,111,94,0.10);
+  --tx-1:      #23211C;
+  --tx-2:      #5E5A4E;
+  --tx-3:      #96907E;
+  --amber:     #B4791F;
+  --red:       #B23B32;
+  --ff-display: 'Newsreader', serif;
+  --ff-body:    'Inter', sans-serif;
+  --r:         10px;
+  --r-lg:      16px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--tx-1);
+  font-family: var(--ff-body);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+/* ── Layout ─────────────────────────────────────────────────── */
+.shell {
+  display: grid;
+  grid-template-columns: 288px 1fr;
+  grid-template-rows: 56px 1fr;
+  height: 100vh;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 22px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: var(--ff-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--tx-1);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.logo-mark {
+  width: 26px;
+  height: 26px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+}
+
+.logo-mark svg { width: 14px; height: 14px; }
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-section {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tx-3);
+  margin-bottom: 12px;
+}
+
+/* ── Drop zone ─────────────────────────────────────────────────── */
+.dropzone {
+  border: 1.5px dashed var(--border-hi);
+  border-radius: var(--r-lg);
+  padding: 22px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg);
+  position: relative;
+}
+
+.dropzone:hover, .dropzone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.dropzone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dz-icon {
+  width: 34px; height: 34px;
+  background: var(--surface);
+  border: 1px solid var(--border-hi);
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 10px;
+}
+
+.dz-icon svg { width: 16px; height: 16px; color: var(--accent); }
+
+.dz-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tx-1);
+  margin-bottom: 3px;
+}
+
+.dz-sub {
+  font-size: 11.5px;
+  color: var(--tx-3);
+}
+
+/* ── Progress ─────────────────────────────────────────────────── */
+.progress-wrap {
+  display: none;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.progress-wrap.visible { display: flex; }
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-filename {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--tx-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+.progress-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--panel);
+  color: var(--tx-3);
+  flex-shrink: 0;
+}
+
+.progress-status.processing { color: var(--amber); background: rgba(180,121,31,0.1); }
+.progress-status.done       { color: var(--accent); background: var(--accent-soft); }
+.progress-status.failed     { color: var(--red);   background: rgba(178,59,50,0.1); }
+
+.progress-bar-track {
+  height: 4px;
+  background: var(--panel);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.4s ease;
+  position: relative;
+}
+
+.progress-bar-fill.indeterminate {
+  width: 40%;
+  animation: slide 1.5s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0%   { margin-left: 0%; }
+  50%  { margin-left: 60%; }
+  100% { margin-left: 0%; }
+}
+
+.progress-msg {
+  font-size: 12px;
+  color: var(--tx-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Doc list ─────────────────────────────────────────────────── */
+.doc-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.doc-list::-webkit-scrollbar { width: 4px; }
+.doc-list::-webkit-scrollbar-track { background: transparent; }
+.doc-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 10px;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.doc-item:hover  { background: var(--bg); }
+.doc-item.active {
+  background: var(--accent-soft);
+}
+
+.doc-icon {
+  width: 30px; height: 30px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.doc-icon svg { width: 14px; height: 14px; color: var(--accent); }
+
+.doc-info { flex: 1; min-width: 0; }
+
+.doc-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--tx-1);
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.doc-meta {
+  font-size: 11px;
+  color: var(--tx-3);
+  margin-top: 2px;
+}
+
+.doc-badge {
+  font-size: 10.5px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.doc-badge.done       { color: var(--accent); background: var(--accent-soft); }
+.doc-badge.processing { color: var(--amber); background: rgba(180,121,31,0.1); }
+.doc-badge.failed     { color: var(--red);   background: rgba(178,59,50,0.1); cursor: pointer; }
+
+.empty-docs {
+  padding: 28px 12px;
+  text-align: center;
+  color: var(--tx-3);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+/* ── Main area ─────────────────────────────────────────────────── */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Empty / welcome state ─────────────────────────────────────── */
+.welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 40px;
+  text-align: center;
+}
+
+.welcome-graphic {
+  width: 68px; height: 68px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+
+.welcome-graphic svg { width: 32px; height: 32px; color: var(--accent); }
+
+.welcome h2 {
+  font-family: var(--ff-display);
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--tx-1);
+  letter-spacing: -0.01em;
+}
+
+.welcome p {
+  font-size: 13.5px;
+  color: var(--tx-2);
+  max-width: 380px;
+  line-height: 1.7;
+}
+
+.welcome-hints {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--tx-2);
+  width: 340px;
+}
+
+.hint-num {
+  font-family: var(--ff-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Chat thread ─────────────────────────────────────────────── */
+.chat-thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 24px;
+  display: none;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.chat-thread.visible { display: flex; }
+
+.chat-thread::-webkit-scrollbar { width: 4px; }
+.chat-thread::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+/* ── Message bubbles ─────────────────────────────────────────── */
+.msg { display: flex; gap: 10px; max-width: 100%; }
+.msg.user { flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--accent);
+  position: relative;
+}
+.msg-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  background: var(--surface);
+  border-radius: 50%;
+}
+
+.msg.user .msg-avatar { display: none; }
+
+.msg-body { flex: 1; min-width: 0; }
+
+.msg-bubble {
+  padding: 13px 17px;
+  border-radius: var(--r-lg);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.msg.user .msg-bubble {
+  background: var(--accent);
+  color: #FBFBF8;
+  margin-left: auto;
+  max-width: 72%;
+  border-radius: var(--r-lg) 4px var(--r-lg) var(--r-lg);
+}
+
+.msg.assistant .msg-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--tx-1);
+  border-radius: 4px var(--r-lg) var(--r-lg) var(--r-lg);
+  box-shadow: 0 1px 2px rgba(35,33,28,0.03);
+}
+
+/* Markdown inside assistant bubbles */
+.msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+  font-family: var(--ff-display);
+  font-weight: 600;
+  margin: 12px 0 6px;
+  color: var(--tx-1);
+}
+.msg-bubble p { margin: 6px 0; }
+.msg-bubble ul, .msg-bubble ol { padding-left: 20px; margin: 6px 0; }
+.msg-bubble li { margin: 3px 0; }
+.msg-bubble strong { color: var(--tx-1); font-weight: 600; }
+.msg-bubble code {
+  font-family: ui-monospace, monospace;
+  font-size: 12.5px;
+  background: var(--panel);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--accent-hi);
+}
+.msg-bubble pre {
+  background: var(--panel);
+  border-radius: var(--r);
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.msg-bubble pre code { background: none; padding: 0; }
+.msg-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 8px 0;
+}
+.msg-bubble th, .msg-bubble td {
+  border: 1px solid var(--border);
+  padding: 7px 10px;
+  text-align: left;
+}
+.msg-bubble th { background: var(--panel); color: var(--tx-2); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ── Typing indicator ─────────────────────────────────────────── */
+.typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 13px 17px;
+}
+
+.typing span {
+  width: 6px; height: 6px;
+  background: var(--tx-3);
+  border-radius: 50%;
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ── Input bar ─────────────────────────────────────────────────── */
+.input-bar {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  display: none;
+}
+
+.input-bar.visible { display: block; }
+
+.input-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.input-doc-label {
+  font-size: 11.5px;
+  color: var(--tx-3);
+  margin-bottom: 8px;
+}
+
+.input-doc-name {
+  color: var(--accent-hi);
+  font-weight: 500;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 6px 6px 6px 16px;
+  transition: border-color 0.2s;
+}
+
+.input-row:focus-within { border-color: var(--accent); }
+
+.input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 0;
+  color: var(--tx-1);
+  font-family: var(--ff-body);
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  min-height: 24px;
+  max-height: 120px;
+  line-height: 1.5;
+}
+
+.input-field::placeholder { color: var(--tx-3); }
+
+.send-btn {
+  width: 38px; height: 38px;
+  background: var(--accent);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.send-btn:hover:not(:disabled)   { background: var(--accent-hi); }
+.send-btn:active:not(:disabled)  { transform: scale(0.94); }
+.send-btn:disabled { background: var(--border-hi); cursor: not-allowed; }
+.send-btn svg { width: 16px; height: 16px; color: #fff; }
+
+/* ── Toast ─────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--tx-1);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--bg);
+  box-shadow: 0 8px 24px rgba(35,33,28,0.25);
+  z-index: 500;
+  max-width: 320px;
+  display: none;
+  gap: 10px;
+  align-items: center;
+}
+
+.toast.visible { display: flex; }
+.toast.error   { background: var(--red); }
+.toast.success { background: var(--accent-hi); }
+
+/* ── Scrollbar global ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 14 14" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2.4 11.5L7 2.5l4.6 9"/>
+          <path d="M4.4 7.6h5.2"/>
+        </svg>
+      </div>
+      AsadNav
+    </div>
+    <div class="topbar-right">
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Upload section -->
+    <div class="sidebar-section">
+      <div class="sidebar-label">Add a document</div>
+
+      <!-- Drop zone -->
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".pdf"/>
+        <div class="dz-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 16l4-4 3 3 5-6 4 5"/>
+            <rect x="1" y="1" width="18" height="18" rx="4"/>
+          </svg>
+        </div>
+        <div class="dz-title">Drop a PDF here</div>
+        <div class="dz-sub">or click to browse · up to 50 MB</div>
+      </div>
+
+      <!-- Progress (shown after upload) -->
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-header">
+          <span class="progress-filename" id="progressFilename">—</span>
+          <span class="progress-status" id="progressStatus">—</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill indeterminate" id="progressFill"></div>
+        </div>
+        <div class="progress-msg" id="progressMsg">Starting…</div>
+      </div>
+    </div>
+
+    <!-- Documents list -->
+    <div class="sidebar-section" style="padding-bottom:6px;">
+      <div class="sidebar-label">Your documents</div>
+    </div>
+    <div class="doc-list" id="docList">
+      <div class="empty-docs">Nothing here yet.<br/>Upload a PDF to start asking questions.</div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- Welcome state -->
+    <div class="welcome" id="welcome">
+      <div class="welcome-graphic">
+        <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.3">
+          <path d="M8 32V8a2 2 0 012-2h13l9 9v17a2 2 0 01-2 2H10a2 2 0 01-2-2z"/>
+          <path d="M23 6v9h9"/>
+          <path d="M14 20h12M14 24h8"/>
+        </svg>
+      </div>
+      <h2>Ask your document anything</h2>
+      <p>Upload a PDF and talk to it like you would a colleague who's already read it, cover to cover. AsadNav answers in plain language and shows you exactly where each answer came from.</p>
+      <div class="welcome-hints">
+        <div class="hint"><span class="hint-num">1</span>Drop a PDF in the sidebar</div>
+        <div class="hint"><span class="hint-num">2</span>Give it a moment to read through it</div>
+        <div class="hint"><span class="hint-num">3</span>Ask your question and check the sources</div>
+      </div>
+    </div>
+
+    <!-- Chat thread -->
+    <div class="chat-thread" id="chatThread"></div>
+
+    <!-- Input bar -->
+    <div class="input-bar" id="inputBar">
+      <div class="input-inner">
+        <div class="input-doc-label">
+          Talking about <span class="input-doc-name" id="activeDocName">—</span>
+        </div>
+        <div class="input-row">
+          <textarea
+            class="input-field"
+            id="queryInput"
+            placeholder="Ask a question about this document…"
+            rows="1"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" disabled>
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3.5 10l13-7-5 7 5 7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+const API = '';  // relative — frontend and API are served from the same origin
+
+// ── State ──────────────────────────────────────────────────────
+let state = {
+  activeDocId:   null,
+  activeDocName: null,
+  pollTimer:     null,
+  querying:      false,
+  docs:          [],
+};
+
+// ── Utility ────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const el = (tag, cls, html) => {
+  const e = document.createElement(tag);
+  if (cls)  e.className = cls;
+  if (html) e.innerHTML = html;
+  return e;
+};
+
+function showToast(msg, type = '') {
+  const t = $('toast');
+  $('toastMsg').textContent = msg;
+  t.className = `toast visible ${type}`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = 'toast', 3500);
+}
+
+function autoResize(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+}
+
+// ── Load docs list ─────────────────────────────────────────────
+async function loadDocs(retries = 2) {
+  try {
+    const r = await fetch(`${API}/documents`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) {
+      console.error('[loadDocs] /docs returned', r.status, await r.text().catch(()=>'')); 
+      showToast(`Couldn't load your documents (HTTP ${r.status}).`, 'error');
+      return;
+    }
+    const docs = await r.json();
+    state.docs = docs;
+    renderDocList(docs);
+  } catch (err) {
+    console.error('[loadDocs] fetch failed:', err);
+    if (retries > 0) {
+      // Server is likely busy (GIL contention from a CPU-heavy ingestion
+      // job in the thread pool). Back off briefly and try again instead
+      // of silently giving up.
+      await new Promise(res => setTimeout(res, 1500));
+      return loadDocs(retries - 1);
+    }
+    showToast("Couldn't reach the server to load your documents.", 'error');
+  }
+}
+
+function renderDocList(docs) {
+  const list = $('docList');
+  if (!docs.length) {
+    list.innerHTML = '<div class="empty-docs">Nothing here yet.<br/>Upload a PDF to start asking questions.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  docs.forEach(doc => {
+    const item = el('div', `doc-item${doc.doc_id === state.activeDocId ? ' active' : ''}`);
+    const isStuck = doc.status === 'processing' || doc.status === 'failed';
+    const statusText = doc.status === 'done' ? 'Ready' : doc.status === 'processing' ? 'Reading…' : 'Failed';
+
+    item.innerHTML = `
+      <div class="doc-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4">
+          <path d="M3 14V2a1 1 0 011-1h6l3 3v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/>
+          <path d="M10 1v3h3"/>
+          <path d="M5 8h6M5 10h4"/>
+        </svg>
+      </div>
+      <div class="doc-info">
+        <div class="doc-name" title="${doc.filename}">${doc.filename}</div>
+        <div class="doc-meta">${doc.created_at ? doc.created_at.slice(0,10) : ''}</div>
+      </div>
+      <span class="doc-badge ${doc.status}" ${isStuck ? 'title="Click to remove and re-upload"' : ''}>${statusText}</span>
+    `;
+
+    if (doc.status === 'done') {
+      item.addEventListener('click', () => selectDoc(doc));
+    }
+
+    if (isStuck) {
+      const badge = item.querySelector('.doc-badge');
+      badge.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        try {
+          const r = await fetch(`${API}/documents/${doc.doc_id}`, { method: 'DELETE' });
+          if (!r.ok) throw new Error('Delete failed');
+          showToast(`Removed "${doc.filename}". You can re-upload it now.`, 'success');
+          await loadDocs();
+        } catch (err) {
+          showToast(err.message, 'error');
+        }
+      });
+    }
+
+    list.appendChild(item);
+  });
+}
+
+function selectDoc(doc) {
+  state.activeDocId   = doc.doc_id;
+  state.activeDocName = doc.filename;
+  $('activeDocName').textContent = doc.filename;
+  $('welcome').style.display = 'none';
+  $('chatThread').className  = 'chat-thread visible';
+  $('inputBar').className    = 'input-bar visible';
+  $('sendBtn').disabled      = false;
+  $('queryInput').focus();
+  renderDocList(state.docs);
+}
+
+// ── Upload / ingest ────────────────────────────────────────────
+async function handleFile(file) {
+  if (!file || !file.name.endsWith('.pdf')) {
+    showToast('Please upload a PDF file.', 'error'); return;
+  }
+  if (file.size > 50 * 1024 * 1024) {
+    showToast('That file is over the 50 MB limit.', 'error'); return;
+  }
+
+  // Show progress UI
+  $('dropzone').style.display = 'none';
+  const pw = $('progressWrap');
+  pw.classList.add('visible');
+  $('progressFilename').textContent = file.name;
+  $('progressStatus').className     = 'progress-status processing';
+  $('progressStatus').textContent   = 'Uploading';
+  $('progressMsg').textContent      = 'Uploading file…';
+
+  const form = new FormData();
+  form.append('file', file);
+
+  let job_id, doc_id;
+  try {
+    const r = await fetch(`${API}/ingest`, { method: 'POST', body: form });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Upload failed');
+
+    if (data.status === 'already_indexed') {
+      await loadDocs();
+      const existing = state.docs.find(d => d.doc_id === data.doc_id);
+      resetUploadUI();
+
+      if (existing && existing.status === 'done') {
+        showToast("You've already uploaded this document.", 'success');
+        selectDoc(existing);
+      } else if (existing && existing.status === 'processing') {
+        showToast(
+          "This file got stuck partway through an earlier upload. Remove it and try again.",
+          'error'
+        );
+      } else if (existing && existing.status === 'failed') {
+        showToast(
+          "The last attempt to read this file failed. Remove it and try again.",
+          'error'
+        );
+      } else {
+        showToast("This document is already indexed, but its record couldn't be found.", 'error');
+      }
+      return;
+    }
+
+    job_id = data.job_id;
+    doc_id = data.doc_id;
+    $('progressStatus').textContent = 'Reading';
+    pollStatus(job_id, doc_id, file.name);
+  } catch (e) {
+    showToast(e.message, 'error');
+    resetUploadUI();
+  }
+}
+
+function pollStatus(job_id, doc_id, filename) {
+  clearInterval(state.pollTimer);
+
+  state.pollTimer = setInterval(async () => {
+    try {
+      const r    = await fetch(`${API}/status/${job_id}`);
+      const data = await r.json();
+
+      $('progressMsg').textContent   = data.progress || 'Reading through the document…';
+      $('progressStatus').textContent = data.status === 'processing' ? 'Reading' : data.status;
+      $('progressStatus').className   = `progress-status ${data.status}`;
+
+      const fill = $('progressFill');
+
+      if (data.status === 'done') {
+        clearInterval(state.pollTimer);
+        fill.classList.remove('indeterminate');
+        fill.style.width = '100%';
+        $('progressStatus').textContent = 'Ready';
+        showToast(`"${filename}" is ready — ask away.`, 'success');
+        await loadDocs();
+        const doc = state.docs.find(d => d.doc_id === doc_id);
+        if (doc) selectDoc(doc);
+        setTimeout(resetUploadUI, 2000);
+
+      } else if (data.status === 'failed') {
+        clearInterval(state.pollTimer);
+        fill.classList.remove('indeterminate');
+        fill.style.background = 'var(--red)';
+        fill.style.width = '100%';
+        showToast(`Couldn't finish reading this file: ${data.error || 'unknown error'}`, 'error');
+        setTimeout(resetUploadUI, 3000);
+      }
+    } catch (err) {
+      console.warn('[pollStatus] fetch blip, retrying:', err);
+      // network blip, keep polling
+    }
+  }, 2000);
+}
+
+function resetUploadUI() {
+  $('dropzone').style.display  = '';
+  $('progressWrap').classList.remove('visible');
+  $('progressFill').classList.add('indeterminate');
+  $('progressFill').style.width = '';
+  $('progressFill').style.background = '';
+}
+
+// ── Chat ───────────────────────────────────────────────────────
+async function sendQuery() {
+  const input = $('queryInput');
+  const q     = input.value.trim();
+  if (!q || !state.activeDocId || state.querying) return;
+
+  state.querying = true;
+  $('sendBtn').disabled = true;
+  input.value = '';
+  input.style.height = '';
+
+  appendMsg('user', q);
+  const typingMsg = appendTyping();
+  scrollBottom();
+
+  try {
+    const r = await fetch(`${API}/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question      : q,
+        doc_id        : state.activeDocId,
+        base_image_url: `${API}/images`,
+      }),
+    });
+
+    const data = await r.json();
+    typingMsg.remove();
+
+    if (!r.ok) {
+      appendMsg('assistant', `**I ran into a problem:** ${data.detail || 'Something went wrong.'}`);
+    } else {
+      appendAnswer(data.answer, data.sources);
+    }
+  } catch (e) {
+    typingMsg.remove();
+    appendMsg('assistant', `**I couldn't reach the server:** ${e.message}`);
+  }
+
+  state.querying    = false;
+  $('sendBtn').disabled = false;
+  input.focus();
+  scrollBottom();
+}
+
+function appendMsg(role, text) {
+  const thread = $('chatThread');
+  const wrap   = el('div', `msg ${role}`);
+  const avatar = el('div', 'msg-avatar');
+  const body   = el('div', 'msg-body');
+  const bubble = el('div', 'msg-bubble');
+
+  bubble.innerHTML = marked.parse(text);
+  body.appendChild(bubble);
+  wrap.appendChild(avatar);
+  wrap.appendChild(body);
+  thread.appendChild(wrap);
+  return wrap;
+}
+
+function appendTyping() {
+  const thread = $('chatThread');
+  const wrap   = el('div', 'msg assistant');
+  const avatar = el('div', 'msg-avatar');
+  const body   = el('div', 'msg-body');
+  const bubble = el('div', 'msg-bubble');
+  const typing = el('div', 'typing', '<span></span><span></span><span></span>');
+  bubble.appendChild(typing);
+  body.appendChild(bubble);
+  wrap.appendChild(avatar);
+  wrap.appendChild(body);
+  thread.appendChild(wrap);
+  return wrap;
+}
+
+function appendAnswer(answer, sources) {
+  const thread = $('chatThread');
+  const wrap   = el('div', 'msg assistant');
+  const avatar = el('div', 'msg-avatar');
+  const body   = el('div', 'msg-body');
+  const bubble = el('div', 'msg-bubble');
+
+  bubble.innerHTML = marked.parse(answer);
+  body.appendChild(bubble);
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(body);
+  thread.appendChild(wrap);
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function scrollBottom() {
+  const t = $('chatThread');
+  t.scrollTop = t.scrollHeight;
+}
+
+// ── Event listeners ────────────────────────────────────────────
+$('fileInput').addEventListener('change', e => handleFile(e.target.files[0]));
+
+const dz = $('dropzone');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', ()  => dz.classList.remove('drag-over'));
+dz.addEventListener('drop',      e  => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
+});
+
+$('sendBtn').addEventListener('click', sendQuery);
+
+$('queryInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendQuery();
+  }
+});
+
+$('queryInput').addEventListener('input', function() {
+  autoResize(this);
+  $('sendBtn').disabled = !this.value.trim() || !state.activeDocId || state.querying;
+});
+
+// ── Init ───────────────────────────────────────────────────────
+loadDocs();
+setInterval(loadDocs, 15000);
+</script>
+</body>
+</html>

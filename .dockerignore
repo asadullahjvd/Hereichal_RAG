@@ -1,0 +1,31 @@
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ── Runtime data (mount as a volume instead of baking in) ─────
+storage/
+
+# ── Version control / editor ───────────────────────────────────
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docs / misc ─────────────────────────────────────────────
+README.md
+*.md
+.env
+.dockerignore
+Dockerfile
